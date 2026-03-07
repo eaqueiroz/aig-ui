@@ -1,0 +1,71 @@
+<div class="page">
+  <div class="hero">
+    <h1>AIG Async File Processing</h1>
+    <p>Upload a file, track processing progress, and view the final result.</p>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Upload file</h2>
+      <p class="muted">This will call <code>POST /uploads</code>, upload the file to S3, then start polling the job status.</p>
+
+      <input type="file" (change)="onFileSelected($event)" />
+      <div class="actions">
+        <button (click)="submit()" [disabled]="isSubmitting || isUploading">
+          {{ isUploading ? 'Uploading...' : isSubmitting ? 'Creating job...' : 'Upload & Process' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Check job status</h2>
+      <p class="muted">Use an existing <code>jobId</code> to fetch the latest status and result.</p>
+
+      <div class="lookup-row">
+        <input
+          type="text"
+          [(ngModel)]="lookupJobId"
+          placeholder="Enter jobId"
+        />
+        <button (click)="fetchLookupJob()">Check</button>
+      </div>
+    </section>
+  </div>
+
+  <div *ngIf="errorMessage" class="message error">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="message success">{{ successMessage }}</div>
+
+  <section class="card result-card" *ngIf="currentJob">
+    <div class="result-header">
+      <div>
+        <h2>Job details</h2>
+        <p class="muted">Track the latest processing state and result payload.</p>
+      </div>
+      <span [class]="getStatusClass(currentJob.status)">{{ currentJob.status }}</span>
+    </div>
+
+    <div class="meta-grid">
+      <div><strong>Job ID:</strong> {{ currentJob.jobId }}</div>
+      <div *ngIf="currentJob.fileName"><strong>File:</strong> {{ currentJob.fileName }}</div>
+      <div *ngIf="currentJob.contentType"><strong>Content type:</strong> {{ currentJob.contentType }}</div>
+      <div *ngIf="currentJob.createdAt"><strong>Created:</strong> {{ currentJob.createdAt }}</div>
+      <div *ngIf="currentJob.updatedAt"><strong>Updated:</strong> {{ currentJob.updatedAt }}</div>
+      <div *ngIf="currentJob.correlationId"><strong>Correlation ID:</strong> {{ currentJob.correlationId }}</div>
+      <div><strong>Polling:</strong> {{ isPolling ? 'Active' : 'Stopped' }}</div>
+    </div>
+
+    <div *ngIf="currentJob.error" class="message error">
+      {{ currentJob.error }}
+    </div>
+
+    <div class="json-block">
+      <h3>Full response</h3>
+      <pre>{{ stringify(currentJob) }}</pre>
+    </div>
+
+    <div class="json-block" *ngIf="currentJob.result">
+      <h3>Result only</h3>
+      <pre>{{ stringify(currentJob.result) }}</pre>
+    </div>
+  </section>
+</div>
